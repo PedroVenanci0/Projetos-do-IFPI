@@ -1,0 +1,10 @@
+    ==================================
+    Nome do Ganhador: Iglesi
+    Tempo do Ganhador: 8.43
+    Número de Jogadas: 10
+    ==================================
+    Perdedor: Pedro
+    Tempo do Perdedor: 33.48
+    Número de Jogadas: 19
+    ==================================
+    

@@ -1,0 +1,10 @@
+    ==================================
+    Nome do Ganhador: Pedro 
+    Tempo do Ganhador: 10.11
+    Número de Jogadas: 9
+    ==================================
+    Perdedor: rOGERIO
+    Tempo do Perdedor: 38.50
+    Número de Jogadas: 17
+    ==================================
+    
