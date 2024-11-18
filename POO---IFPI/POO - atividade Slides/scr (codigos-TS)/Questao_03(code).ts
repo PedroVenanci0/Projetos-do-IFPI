@@ -1,6 +1,6 @@
 class Hotel {
     quantReservas: number;
-    constructor(quantReservas: number) {
+    constructor(quantReservas: number = 0) {
       this.quantReservas = quantReservas;
     }
   
