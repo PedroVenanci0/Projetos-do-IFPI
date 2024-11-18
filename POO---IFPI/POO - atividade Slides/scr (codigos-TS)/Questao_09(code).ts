@@ -14,7 +14,7 @@ class Conta_ {
       return false; 
     }
     
-    transferir(contaDestino: Conta, valor: number): boolean {
+    transferir(contaDestino: Conta_, valor: number): boolean {
       if (this.sacar(valor)) {
         contaDestino.saldo += valor;
         return true; 
@@ -27,8 +27,8 @@ class Conta_ {
     }
   }
 
-  let conta01 = new Conta("1", 100);
-  let conta02 = new Conta("2", 50);
+  let conta01 = new Conta_("1", 100);
+  let conta02 = new Conta_("2", 50);
   
  
   console.log(conta01.sacar(30)); 

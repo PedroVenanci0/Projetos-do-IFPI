@@ -99,3 +99,5 @@ b/ Quando c1 passa a apontar para c2, a referência original de c1 se perde, faz
 
 _____________________________________________________________________________
 
+11. Na Questão 9, temos um código mais aberto a feedback para o usuario, como quando falamos se é possivel transferir e sacar o valor por meio
+do true e false, ja na questao 10 temos um código que o proprio objeto gerencia sua consistência.
