@@ -1,80 +1,96 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
-    int id;
-    int tempo_execucao;
+    char nome[10];
+    int ingresso;
+    int duracao;
     int tempo_restante;
-    int tempo_chegada;
-    int tempo_termino;
+    int tempo_finalizacao;
+    int tempo_espera;
+    int tempo_executado;
 } Processo;
 
-void round_robin(Processo processos[], int num_processos, int quantum, int troca_contexto) {
-    int tempo_total = 0, processos_restantes = num_processos;
-    int tempo_vida[num_processos], tempo_espera[num_processos];
+int comparar_ingresso(const void *a, const void *b) {
+    return ((Processo *)a)->ingresso - ((Processo *)b)->ingresso;
+}
 
-    // Inicializa os tempos de vida e de espera para 0
-    for (int i = 0; i < num_processos; i++) {
-        tempo_vida[i] = 0;
-        tempo_espera[i] = 0;
-        processos[i].tempo_restante = processos[i].tempo_execucao; // Inicializa o tempo restante
+void round_robin(Processo processos[], int n, int quantum, int troca_contexto) {
+    int tempo_atual = 0, completados = 0;
+    int tempos_vida[n], tempos_espera[n];
+    Processo *fila[n];
+    int frente = 0, tras = 0;
+    
+    qsort(processos, n, sizeof(Processo), comparar_ingresso);
+
+    for (int i = 0; i < n; i++) {
+        processos[i].tempo_restante = processos[i].duracao;
+        processos[i].tempo_executado = 0;
     }
 
-    while (processos_restantes > 0) {
-        int progresso = 0; // Para saber se algum processo foi executado
-        for (int i = 0; i < num_processos; i++) {
-            if (processos[i].tempo_restante > 0 && processos[i].tempo_chegada <= tempo_total) {
-                int tempo_executado = (processos[i].tempo_restante > quantum) ? quantum : processos[i].tempo_restante;
-                tempo_total += tempo_executado;
-                processos[i].tempo_restante -= tempo_executado;
+    int indice_prox = 0;
+    while (completados < n) {
+        while (indice_prox < n && processos[indice_prox].ingresso <= tempo_atual) {
+            fila[tras++] = &processos[indice_prox++];
+        }
 
-                // Se o processo terminou, registra o tempo de término
-                if (processos[i].tempo_restante == 0) {
-                    processos[i].tempo_termino = tempo_total;
-                    tempo_vida[i] = processos[i].tempo_termino - processos[i].tempo_chegada;
-                    tempo_espera[i] = tempo_vida[i] - processos[i].tempo_execucao;
-                    processos_restantes--;
-                } else {
-                    // Se o processo ainda não terminou, realiza troca de contexto
-                    tempo_total += troca_contexto;
-                }
+        if (frente < tras) {
+            Processo *proc = fila[frente++];
+            int exec_time = (proc->tempo_restante < quantum) ? proc->tempo_restante : quantum;
+            proc->tempo_restante -= exec_time;
+            proc->tempo_executado += exec_time;
+            tempo_atual += exec_time;
 
-                progresso = 1; // Indica que um processo foi executado
+            while (indice_prox < n && processos[indice_prox].ingresso <= tempo_atual) {
+                fila[tras++] = &processos[indice_prox++];
             }
-        }
 
-        // Se nenhum processo foi executado em um ciclo, incrementa o tempo_total
-        if (!progresso) {
-            tempo_total++;
+            if (proc->tempo_restante > 0) {
+                fila[tras++] = proc;
+            } else {
+                proc->tempo_finalizacao = tempo_atual;
+                tempos_vida[completados] = proc->tempo_finalizacao - proc->ingresso;
+                tempos_espera[completados] = tempos_vida[completados] - proc->duracao;
+                completados++;
+            }
+
+            tempo_atual += troca_contexto;
+        } else {
+            tempo_atual++;
         }
     }
 
-    // Calculando as médias de tempo de vida e tempo de espera
-    int soma_tempo_vida = 0, soma_tempo_espera = 0;
-    for (int i = 0; i < num_processos; i++) {
-        soma_tempo_vida += tempo_vida[i];
-        soma_tempo_espera += tempo_espera[i];
+    double tm_vida = 0, tm_espera = 0;
+    for (int i = 0; i < n; i++) {
+        tm_vida += tempos_vida[i];
+        tm_espera += tempos_espera[i];
     }
+    tm_vida /= n;
+    tm_espera /= n;
 
-    float tempo_medio_vida = (float)soma_tempo_vida / num_processos;
-    float tempo_medio_espera = (float)soma_tempo_espera / num_processos;
-
-    printf("Tm_vida = %.0f u.t\n", tempo_medio_vida);
-    printf("Tm_espera = %.0f u.t\n", tempo_medio_espera);
+    printf("Tempo médio de vida: %.2f\n", tm_vida);
+    printf("Tempo médio de espera: %.2f\n", tm_espera);
 }
 
 int main() {
-    Processo processos[] = {
-        {1, 10, 10, 5, 0},  
-        {2, 30, 30, 15, 0}, 
-        {3, 20, 20, 10, 0}, 
-        {4, 40, 40, 0, 0}   
+    // Processo processos[] = {
+    //     {"T1", 5, 10, 0, 0, 0, 0},
+    //     {"T2", 15, 30, 0, 0, 0, 0},
+    //     {"T3", 10, 20, 0, 0, 0, 0},
+    //     {"T4", 0, 40, 0, 0, 0, 0}
+    // };
+
+        Processo processos[] = {
+        {"T1", 0, 12, 0, 0, 0, 0},
+        {"T2", 5, 25, 0, 0, 0, 0},
+        {"T3", 8, 15, 0, 0, 0, 0},
+        {"T4", 12, 20, 0, 0, 0, 0}
     };
 
-    int num_processos = sizeof(processos) / sizeof(processos[0]);
-    int quantum = 15;
-    int troca_contexto = 4;
+    int n = sizeof(processos) / sizeof(processos[0]);
+    int quantum = 15, troca_contexto = 4;
 
-    round_robin(processos, num_processos, quantum, troca_contexto);
-
+    round_robin(processos, n, quantum, troca_contexto);
     return 0;
 }
