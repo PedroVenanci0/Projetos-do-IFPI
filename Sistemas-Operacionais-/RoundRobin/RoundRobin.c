@@ -74,18 +74,11 @@ void round_robin(Processo processos[], int n, int quantum, int troca_contexto) {
 }
 
 int main() {
-    // Processo processos[] = {
-    //     {"T1", 5, 10, 0, 0, 0, 0},
-    //     {"T2", 15, 30, 0, 0, 0, 0},
-    //     {"T3", 10, 20, 0, 0, 0, 0},
-    //     {"T4", 0, 40, 0, 0, 0, 0}
-    // };
-
-        Processo processos[] = {
-        {"T1", 0, 12, 0, 0, 0, 0},
-        {"T2", 5, 25, 0, 0, 0, 0},
-        {"T3", 8, 15, 0, 0, 0, 0},
-        {"T4", 12, 20, 0, 0, 0, 0}
+    Processo processos[] = {
+        {"T1", 5, 10, 0, 0, 0, 0},
+        {"T2", 15, 30, 0, 0, 0, 0},
+        {"T3", 10, 20, 0, 0, 0, 0},
+        {"T4", 0, 40, 0, 0, 0, 0}
     };
 
     int n = sizeof(processos) / sizeof(processos[0]);
