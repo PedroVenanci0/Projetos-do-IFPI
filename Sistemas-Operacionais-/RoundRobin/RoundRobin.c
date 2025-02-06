@@ -1,91 +1,80 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
-#define TEMPO_MAX 3
-#define TAMANHO_MAX 5
 
 typedef struct {
-    int dados[TAMANHO_MAX];
-    int inicio;
-    int fim;
-    int tamanho;
-} Fila;
+    int id;
+    int tempo_execucao;
+    int tempo_restante;
+    int tempo_chegada;
+    int tempo_termino;
+} Processo;
 
+void round_robin(Processo processos[], int num_processos, int quantum, int troca_contexto) {
+    int tempo_total = 0, processos_restantes = num_processos;
+    int tempo_vida[num_processos], tempo_espera[num_processos];
 
-Fila* criaFila() {
-    Fila* F = (Fila*)malloc(sizeof(Fila));
-    F->inicio = 0;
-    F->fim = 0;
-    F->tamanho = 0;
-    return F;
-}
-
-
-bool vazia(Fila* F) {
-    return F->tamanho == 0;
-}
-
-
-bool cheia(Fila* F) {
-    return F->tamanho == TAMANHO_MAX;
-}
-
-
-void enfileira(int x, Fila* F) {
-    if (cheia(F)) {
-        printf("Fila cheia!\n");
-        return;
+    // Inicializa os tempos de vida e de espera para 0
+    for (int i = 0; i < num_processos; i++) {
+        tempo_vida[i] = 0;
+        tempo_espera[i] = 0;
+        processos[i].tempo_restante = processos[i].tempo_execucao; // Inicializa o tempo restante
     }
-    F->dados[F->fim] = x; // Coloca o novo elemento x na posição indicada por fim
-    F->fim = (F->fim + 1) % TAMANHO_MAX; // Move o índice fim para a próxima posição
-    F->tamanho++;
-}
 
-int desenfileira(Fila* F) {
-    if (vazia(F)) {
-        printf("Fila vazia!\n");
-        return -1;
-    }
-    int valor = F->dados[F->inicio];
-    F->inicio = (F->inicio + 1) % TAMANHO_MAX; 
-    F->tamanho--;
-    return valor;
-}
+    while (processos_restantes > 0) {
+        int progresso = 0; // Para saber se algum processo foi executado
+        for (int i = 0; i < num_processos; i++) {
+            if (processos[i].tempo_restante > 0 && processos[i].tempo_chegada <= tempo_total) {
+                int tempo_executado = (processos[i].tempo_restante > quantum) ? quantum : processos[i].tempo_restante;
+                tempo_total += tempo_executado;
+                processos[i].tempo_restante -= tempo_executado;
 
-void destroi(Fila* F) {
-    free(F);
-}
+                // Se o processo terminou, registra o tempo de término
+                if (processos[i].tempo_restante == 0) {
+                    processos[i].tempo_termino = tempo_total;
+                    tempo_vida[i] = processos[i].tempo_termino - processos[i].tempo_chegada;
+                    tempo_espera[i] = tempo_vida[i] - processos[i].tempo_execucao;
+                    processos_restantes--;
+                } else {
+                    // Se o processo ainda não terminou, realiza troca de contexto
+                    tempo_total += troca_contexto;
+                }
 
-int main(void) {
-    Fila* F = criaFila();
+                progresso = 1; // Indica que um processo foi executado
+            }
+        }
 
-    enfileira(67, F); 
-    enfileira(85, F); 
-    enfileira(93, F); 
-    enfileira(16, F); 
-
-    printf("===== Escalonamento Round-Robin =====\n\n");
-
-    while (!vazia(F)) {
-        int x = desenfileira(F);
-        int t = x / 10; 
-        int p = x % 10;  
-
-        printf("Processo %d | Tempo restante: %d\n", p, t);
-
-        if (t > TEMPO_MAX) {
-            printf("- Executado por %d unidades de tempo.\n", TEMPO_MAX);
-            printf("- Processo %d pausado e reinserido com %d unidades restantes.\n\n", p, t - TEMPO_MAX);
-            enfileira((t - TEMPO_MAX) * 10 + p, F);  
-        } else {
-            printf("- Executado por %d unidades de tempo.\n", t);
-            printf("- Processo %d concluído com sucesso.\n\n", p);
+        // Se nenhum processo foi executado em um ciclo, incrementa o tempo_total
+        if (!progresso) {
+            tempo_total++;
         }
     }
 
-    printf("===== Fim da Execução =====\n");
+    // Calculando as médias de tempo de vida e tempo de espera
+    int soma_tempo_vida = 0, soma_tempo_espera = 0;
+    for (int i = 0; i < num_processos; i++) {
+        soma_tempo_vida += tempo_vida[i];
+        soma_tempo_espera += tempo_espera[i];
+    }
 
-    destroi(F);
+    float tempo_medio_vida = (float)soma_tempo_vida / num_processos;
+    float tempo_medio_espera = (float)soma_tempo_espera / num_processos;
+
+    printf("Tm_vida = %.0f u.t\n", tempo_medio_vida);
+    printf("Tm_espera = %.0f u.t\n", tempo_medio_espera);
+}
+
+int main() {
+    Processo processos[] = {
+        {1, 10, 10, 5, 0},  
+        {2, 30, 30, 15, 0}, 
+        {3, 20, 20, 10, 0}, 
+        {4, 40, 40, 0, 0}   
+    };
+
+    int num_processos = sizeof(processos) / sizeof(processos[0]);
+    int quantum = 15;
+    int troca_contexto = 4;
+
+    round_robin(processos, num_processos, quantum, troca_contexto);
+
     return 0;
 }
